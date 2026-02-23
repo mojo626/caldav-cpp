@@ -5,6 +5,7 @@
 #include "curl/curl.h"
 #include "curl/easy.h"
 #include "dotenv.h"
+#include <pugixml.hpp>
 
 //https://decovar.dev/blog/2021/03/08/cmake-cpp-library/
 
@@ -33,9 +34,26 @@ namespace caldav {
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 			std::string user_pass = "ben:" + env.get("PASSWORD");
+
+			std::cout << user_pass << std::endl;
 			curl_easy_setopt(curl, CURLOPT_USERPWD, user_pass.c_str()); 
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "OPTIONS");
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PROPFIND");
 			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+			
+			struct curl_slist *headers = NULL;
+			headers = curl_slist_append(headers, "Depth: 0");
+			headers = curl_slist_append(headers, "Content-Type: application/xml");
+
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+			std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
+    <D:propfind xmlns:D=\"DAV:\"> \
+      <D:prop> \
+        <D:current-user-principal/> \
+      </D:prop> \
+    </D:propfind>";
+
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
 
 			res = curl_easy_perform(curl);
 			
@@ -47,6 +65,13 @@ namespace caldav {
 			curl_easy_cleanup(curl);
 
 			std::cout << "Success: " << readBuffer << std::endl;
+
+			pugi::xml_document doc;
+			pugi::xml_parse_result result = doc.load_string(readBuffer.c_str());
+
+			if (!result) {
+				throw std::runtime_error("Failed to parse XML");
+			}
 
 		}
 
