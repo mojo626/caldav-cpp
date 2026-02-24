@@ -1,4 +1,5 @@
 #include "caldav/client.h"
+#include "caldav/calendar.h"
 #include <string>
 #include <iostream>
 #include <cstdlib>
@@ -6,6 +7,7 @@
 #include "curl/easy.h"
 #include "dotenv.h"
 #include <pugixml.hpp>
+#include <vector>
 
 //https://decovar.dev/blog/2021/03/08/cmake-cpp-library/
 
@@ -106,7 +108,27 @@ namespace caldav {
 				continue;
 			}
 
-			std::cout << calendar.child("href").child_value() << std::endl;
+			std::string display_name = calendar.child("propstat").child("prop").child("displayname").child_value();
+			std::string url = calendar.child("href").child_value();
+			std::string ctag = calendar.child("propstat").child("prop").child("CS:getctag").child_value();
+			ctag = ctag.substr(1, ctag.length() - 2); //remove quotes on either side
+			std::string color = calendar.child("propstat").child("prop").child("ICAL:calendar-color").child_value();
+
+			std::vector<std::string> supported_components;
+
+			for (pugi::xml_node supported_component : calendar.child("propstat").child("prop").child("C:supported-calendar-component-set").children("C:comp")) {
+				std::string name = supported_component.attribute("name").value(); 
+				supported_components.push_back(name);
+			}
+			
+			Calendar cal(
+					display_name,
+					url,
+					ctag,
+					supported_components,
+					color);	
+			
+			std::cout << ctag << std::endl;
 		}
 
 		//std::string user_calendar_path = doc.child("multistatus").child("response").child("propstat").child("prop").child("calendar-home-set").child("href").child_value();
