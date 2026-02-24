@@ -20,6 +20,16 @@ namespace caldav {
 	Client::Client(std::string base_url) : env("../.env") {
 		std::cout << "Base URL: " << base_url << std::endl;
 
+		std::string user_pass = "ben:" + env.get("PASSWORD");
+
+		std::string user_root = GetUserRoot(base_url, user_pass);
+
+		std::string calendar_path = GetUserCalendarPath(base_url, user_root, user_pass);
+
+		GetCalendars(base_url, calendar_path, user_pass, true);
+	}
+
+	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {
 		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
 							<D:propfind xmlns:D=\"DAV:\"> \
 							<D:prop> \
@@ -27,83 +37,97 @@ namespace caldav {
 							</D:prop> \
 							</D:propfind>";
 
-
-		CalDAVRequest(base_url, "", 0, data);
-
-		/*CURL *curl;
-		CURLcode res;
-		std::string readBuffer;
 		
-		curl = curl_easy_init();
+		std::string response = CalDAVRequest(base_url, user_pass, 0, data, verbose);
+		pugi::xml_document doc;
+		pugi::xml_parse_result result = doc.load_string(response.c_str());
 
-		if (curl) {
+		if (!result) {
+			throw std::runtime_error("Failed to parse XML");
+		}
 
-			curl_easy_setopt(curl, CURLOPT_URL, base_url.c_str());
-			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-			std::string user_pass = "ben:" + env.get("PASSWORD");
+		std::string user_root = doc.child("multistatus").child("response").child("propstat").child("prop").child("current-user-principal").child("href").child_value();
+		
+		return user_root;
+	}
+
+	std::string Client::GetUserCalendarPath(std::string base_url, std::string user_root, std::string user_pass, bool verbose) {
+		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
+							<D:propfind xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:caldav\"> \
+							<D:prop> \
+							<C:calendar-home-set/> \
+							</D:prop> \
+							</D:propfind>";
 
 
-			curl_easy_setopt(curl, CURLOPT_USERPWD, user_pass.c_str()); 
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PROPFIND");
-			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-			
-			struct curl_slist *headers = NULL;
-			headers = curl_slist_append(headers, "Depth: 0");
-			headers = curl_slist_append(headers, "Content-Type: application/xml");
+		std::string response = CalDAVRequest(base_url + user_root, user_pass, 0, data, verbose);
 
-			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		pugi::xml_document doc;
+		pugi::xml_parse_result result = doc.load_string(response.c_str());
 
-			std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
-    <D:propfind xmlns:D=\"DAV:\"> \
-      <D:prop> \
-        <D:current-user-principal/> \
-      </D:prop> \
-    </D:propfind>";
+		if (!result) {
+			throw std::runtime_error("Failed to parse XML");
+		}
 
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
 
-			res = curl_easy_perform(curl);
-			
-			if (res != CURLE_OK) {
-				std::cerr << "curl error: " << curl_easy_strerror(res) << std::endl;
+		std::string user_calendar_path = doc.child("multistatus").child("response").child("propstat").child("prop").child("calendar-home-set").child("href").child_value();
+
+		return user_root;
+	}
+
+	void Client::GetCalendars(std::string base_url, std::string calendar_path, std::string user_pass, bool verbose) {
+		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
+							<D:propfind xmlns:D=\"DAV:\" xmlns:cs=\"http://calendarserver.org/ns/\" xmlns:C=\"urn:ietf:params:xml:ns:caldav\" xmlns:apple=\"http://apple.com/ns/ical/\"> \
+							<D:prop> \
+							<D:resourcetype/> \
+							<D:displayname/> \
+							<cs:getctag/> \
+							<C:supported-calendar-component-set/> \
+							<apple:calendar-color/> \
+							</D:prop> \
+							</D:propfind>";
+
+
+		std::string response = CalDAVRequest(base_url + calendar_path, user_pass, 1, data, verbose);
+
+		pugi::xml_document doc;
+		pugi::xml_parse_result result = doc.load_string(response.c_str());
+
+		if (!result) {
+			throw std::runtime_error("Failed to parse XML");
+		}
+		
+
+		std::cout << response << std::endl;
+
+		for (pugi::xml_node calendar : doc.child("multistatus").children("response")) {
+			//skip the base calendar collection (I don't think we want this, chekc other services that are not radicale to make sure)
+			if (calendar.child("propstat").child("prop").child("resourcetype").child("principal")) {
+				continue;
 			}
 
+			std::cout << calendar.child("href").child_value() << std::endl;
+		}
 
+		//std::string user_calendar_path = doc.child("multistatus").child("response").child("propstat").child("prop").child("calendar-home-set").child("href").child_value();
 
-			std::cout << "Success: " << readBuffer << std::endl;
-
-			pugi::xml_document doc;
-			pugi::xml_parse_result result = doc.load_string(readBuffer.c_str());
-
-			if (!result) {
-				throw std::runtime_error("Failed to parse XML");
-			}
-
-			std::string user_root = doc.child("multistatus").child("response").child("propstat").child("prop").child("current-user-principal").child("href").child_value();
-			
-
-			std::string newData = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
-								   <D:propfind xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:caldav\"> \
-								   <D:prop> \
-								   <C:calendar-home-set/> \
-								   </D:prop> \
-								   </D:propfind>";
-
-			std::string user_url = base_url + user_root; 
-
-			curl_easy_setopt(curl, CURLOPT_URL, user_url.c_str());
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, newData.c_str());
-
-			res = curl_easy_perform(curl);
-
-
-			curl_easy_cleanup(curl);
-		}*/
+		//return user_root;
 
 	}
 
-	std::string Client::CalDAVRequest(std::string url, std::string user_pass, int depth, std::string data) {
+	/**
+	 * @brief Sends a PROPFIND request to CalDAV server using libcurl 
+	 * 
+	 * 
+	 * @param  url: base url for server (http://localhost:5232) 
+	 * @param  user_pass: username and password for basic authentication in a "<user>:<password" format
+	 * @param depth: depth of the PROPFIND request
+	 * @param data: xml string of data to send in PROPFIND request
+	 * @param verbose: (optional) whether the curl request should be verbose
+	 * 
+	 * @return std::string of response from server
+	 */
+	std::string Client::CalDAVRequest(std::string url, std::string user_pass, int depth, std::string data, bool verbose) {
 		CURL *curl;
 		CURLcode res;
 		std::string readBuffer;
@@ -115,12 +139,12 @@ namespace caldav {
 			curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-			std::string user_pass2 = "ben:" + env.get("PASSWORD");
+			
 
 
-			curl_easy_setopt(curl, CURLOPT_USERPWD, user_pass2.c_str()); 
+			curl_easy_setopt(curl, CURLOPT_USERPWD, user_pass.c_str()); 
 			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PROPFIND");
-			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+			curl_easy_setopt(curl, CURLOPT_VERBOSE, verbose ? 1L : 0L);
 
 			struct curl_slist *headers = NULL;
 			std::string depth_str = "Depth: " + std::to_string(depth);
@@ -129,12 +153,6 @@ namespace caldav {
 
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-			/*std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
-								<D:propfind xmlns:D=\"DAV:\"> \
-								<D:prop> \
-								<D:current-user-principal/> \
-								</D:prop> \
-								</D:propfind>";*/
 
 			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
 
@@ -145,9 +163,6 @@ namespace caldav {
 				return "";
 			}
 
-
-
-			std::cout << "Success: " << readBuffer << std::endl;
 
 			return readBuffer;
 		}
