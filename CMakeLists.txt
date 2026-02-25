@@ -41,6 +41,19 @@ FetchContent_Declare(
 # Must install openSSL-devel and libpsl-devel packages
 FetchContent_MakeAvailable(libcurl)
 
+file(GLOB UICAL_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/uICAL/src/*.cpp)
+
+add_library(uICAL STATIC
+	${UICAL_SRC_FILES}
+)
+
+target_include_directories(uICAL 
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/uICAL/src
+		#${CMAKE_CURRENT_SOURCE_DIR}/lib/uICAL/src/uICAL
+)
+
+
 find_package(LibIcal REQUIRED)
 
 target_link_libraries(caldav 
@@ -48,6 +61,7 @@ target_link_libraries(caldav
 		pugixml 
 		libcurl 
 		ical
+		uICAL
 )
 
 

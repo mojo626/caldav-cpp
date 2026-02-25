@@ -8,7 +8,8 @@
 #include "dotenv.h"
 #include <pugixml.hpp>
 #include <vector>
-#include <libical/ical.h>
+//#include <libical/ical.h>
+#include <uICAL.h>
 
 //https://decovar.dev/blog/2021/03/08/cmake-cpp-library/
 
@@ -40,7 +41,7 @@ namespace caldav {
 							</d:prop> \
 							<c:filter> \
 							<c:comp-filter name=\"VCALENDAR\"> \
-							<c:comp-filter name=\"VEVENT\" /> \
+							<c:comp-filter name=\"VTODO\" /> \
 							</c:comp-filter> \
 							</c:filter> \
 							</c:calendar-query>";
@@ -58,15 +59,14 @@ namespace caldav {
 
 		std::string event_data = doc.child("multistatus").first_child().child("propstat").child("prop").child("C:calendar-data").child_value();
 
-		
-
-		icalcomponent* event = icalparser_parse_string(event_data.c_str());
+		std::cout << event_data << std::endl;
+		/*icalcomponent* event = icalparser_parse_string(event_data.c_str());
 
 		if (event != 0) {
 			std::cout << icalcomponent_as_ical_string(event) << std::endl;
 		}
 
-		icalcomponent_free(event);
+		icalcomponent_free(event);*/
 	}
 
 	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {

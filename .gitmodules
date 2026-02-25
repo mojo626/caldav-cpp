@@ -1,0 +1,3 @@
+[submodule "lib/uICAL"]
+	path = lib/uICAL
+	url = https://github.com/sourcesimian/uICAL.git
