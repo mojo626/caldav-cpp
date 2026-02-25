@@ -31,13 +31,6 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(pugixml)
 
-FetchContent_Declare(
-    libical
-    GIT_REPOSITORY https://github.com/libical/libical.git
-    GIT_TAG v3.0.20
-)
-
-FetchContent_MakeAvailable(libical)
 
 FetchContent_Declare(
 	libcurl
@@ -48,8 +41,16 @@ FetchContent_Declare(
 # Must install openSSL-devel and libpsl-devel packages
 FetchContent_MakeAvailable(libcurl)
 
-target_link_libraries(caldav PRIVATE pugixml)
-target_link_libraries(caldav PRIVATE libcurl)
+find_package(LibIcal REQUIRED)
+
+target_link_libraries(caldav 
+	PRIVATE 
+		pugixml 
+		libcurl 
+		ical
+)
+
+
 
 # Testing
 add_executable(test

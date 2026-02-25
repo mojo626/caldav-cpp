@@ -8,6 +8,7 @@
 #include "dotenv.h"
 #include <pugixml.hpp>
 #include <vector>
+#include <libical/ical.h>
 
 //https://decovar.dev/blog/2021/03/08/cmake-cpp-library/
 
@@ -46,7 +47,26 @@ namespace caldav {
 
 		std::cout << base_url + calendars[0].url << std::endl;
 
-		std::cout << CalDAVRequest(base_url + calendars[0].url, user_pass, 1, data, "REPORT", true) << std::endl;
+		std::string events = CalDAVRequest(base_url + calendars[0].url, user_pass, 1, data, "REPORT", true);
+
+		pugi::xml_document doc;
+		pugi::xml_parse_result result = doc.load_string(events.c_str());
+
+		if (!result) {
+			throw std::runtime_error("Failed to parse XML");
+		}
+
+		std::string event_data = doc.child("multistatus").first_child().child("propstat").child("prop").child("C:calendar-data").child_value();
+
+		
+
+		icalcomponent* event = icalparser_parse_string(event_data.c_str());
+
+		if (event != 0) {
+			std::cout << icalcomponent_as_ical_string(event) << std::endl;
+		}
+
+		icalcomponent_free(event);
 	}
 
 	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {
