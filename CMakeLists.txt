@@ -9,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(caldav
 	src/client.cpp
+	src/calendar.cpp
 )
 
 target_include_directories(caldav
@@ -29,6 +30,14 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(pugixml)
+
+FetchContent_Declare(
+    libical
+    GIT_REPOSITORY https://github.com/libical/libical.git
+    GIT_TAG v3.0.20
+)
+
+FetchContent_MakeAvailable(libical)
 
 FetchContent_Declare(
 	libcurl

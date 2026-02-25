@@ -28,7 +28,25 @@ namespace caldav {
 
 		std::string calendar_path = GetUserCalendarPath(base_url, user_root, user_pass);
 
-		GetCalendars(base_url, calendar_path, user_pass, true);
+
+		std::vector<caldav::Calendar> calendars = GetCalendars(base_url, calendar_path, user_pass);
+
+		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
+							<c:calendar-query xmlns:d=\"DAV:\" xmlns:c=\"urn:ietf:params:xml:ns:caldav\"> \
+							<d:prop> \
+							<d:getetag/> \
+							<c:calendar-data/> \
+							</d:prop> \
+							<c:filter> \
+							<c:comp-filter name=\"VCALENDAR\"> \
+							<c:comp-filter name=\"VEVENT\" /> \
+							</c:comp-filter> \
+							</c:filter> \
+							</c:calendar-query>";
+
+		std::cout << base_url + calendars[0].url << std::endl;
+
+		std::cout << CalDAVRequest(base_url + calendars[0].url, user_pass, 1, data, "REPORT", true) << std::endl;
 	}
 
 	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {
@@ -40,7 +58,7 @@ namespace caldav {
 							</D:propfind>";
 
 		
-		std::string response = CalDAVRequest(base_url, user_pass, 0, data, verbose);
+		std::string response = CalDAVRequest(base_url, user_pass, 0, data, "PROPFIND", verbose);
 		pugi::xml_document doc;
 		pugi::xml_parse_result result = doc.load_string(response.c_str());
 
@@ -62,7 +80,7 @@ namespace caldav {
 							</D:propfind>";
 
 
-		std::string response = CalDAVRequest(base_url + user_root, user_pass, 0, data, verbose);
+		std::string response = CalDAVRequest(base_url + user_root, user_pass, 0, data, "PROPFIND", verbose);
 
 		pugi::xml_document doc;
 		pugi::xml_parse_result result = doc.load_string(response.c_str());
@@ -77,7 +95,7 @@ namespace caldav {
 		return user_root;
 	}
 
-	void Client::GetCalendars(std::string base_url, std::string calendar_path, std::string user_pass, bool verbose) {
+	std::vector<caldav::Calendar> Client::GetCalendars(std::string base_url, std::string calendar_path, std::string user_pass, bool verbose) {
 		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
 							<D:propfind xmlns:D=\"DAV:\" xmlns:cs=\"http://calendarserver.org/ns/\" xmlns:C=\"urn:ietf:params:xml:ns:caldav\" xmlns:apple=\"http://apple.com/ns/ical/\"> \
 							<D:prop> \
@@ -90,7 +108,7 @@ namespace caldav {
 							</D:propfind>";
 
 
-		std::string response = CalDAVRequest(base_url + calendar_path, user_pass, 1, data, verbose);
+		std::string response = CalDAVRequest(base_url + calendar_path, user_pass, 1, data, "PROPFIND", verbose);
 
 		pugi::xml_document doc;
 		pugi::xml_parse_result result = doc.load_string(response.c_str());
@@ -100,10 +118,11 @@ namespace caldav {
 		}
 		
 
-		std::cout << response << std::endl;
+
+		std::vector<caldav::Calendar> calendars;
 
 		for (pugi::xml_node calendar : doc.child("multistatus").children("response")) {
-			//skip the base calendar collection (I don't think we want this, chekc other services that are not radicale to make sure)
+			//skip the base calendar collection (I don't think we want this, check other services that are not radicale to make sure)
 			if (calendar.child("propstat").child("prop").child("resourcetype").child("principal")) {
 				continue;
 			}
@@ -121,20 +140,18 @@ namespace caldav {
 				supported_components.push_back(name);
 			}
 			
-			Calendar cal(
+			caldav::Calendar cal(
 					display_name,
 					url,
 					ctag,
 					supported_components,
 					color);	
 			
-			std::cout << ctag << std::endl;
+			calendars.push_back(cal);
 		}
 
-		//std::string user_calendar_path = doc.child("multistatus").child("response").child("propstat").child("prop").child("calendar-home-set").child("href").child_value();
 
-		//return user_root;
-
+		return calendars;
 	}
 
 	/**
@@ -149,7 +166,7 @@ namespace caldav {
 	 * 
 	 * @return std::string of response from server
 	 */
-	std::string Client::CalDAVRequest(std::string url, std::string user_pass, int depth, std::string data, bool verbose) {
+	std::string Client::CalDAVRequest(std::string url, std::string user_pass, int depth, std::string data, std::string method, bool verbose) {
 		CURL *curl;
 		CURLcode res;
 		std::string readBuffer;
@@ -165,7 +182,7 @@ namespace caldav {
 
 
 			curl_easy_setopt(curl, CURLOPT_USERPWD, user_pass.c_str()); 
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PROPFIND");
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
 			curl_easy_setopt(curl, CURLOPT_VERBOSE, verbose ? 1L : 0L);
 
 			struct curl_slist *headers = NULL;
