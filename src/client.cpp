@@ -9,8 +9,6 @@
 #include "dotenv.h"
 #include <pugixml.hpp>
 #include <vector>
-//#include <libical/ical.h>
-#include <uICAL.h>
 
 //https://decovar.dev/blog/2021/03/08/cmake-cpp-library/
 
