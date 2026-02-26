@@ -1,5 +1,6 @@
 #include "caldav/client.h"
 #include "caldav/calendar.h"
+#include "caldav/parseical.h"
 #include <string>
 #include <iostream>
 #include <cstdlib>
@@ -26,7 +27,7 @@ namespace caldav {
 
 		std::string user_pass = "ben:" + env.get("PASSWORD");
 
-		std::string user_root = GetUserRoot(base_url, user_pass);
+		std::string user_root = GetUserRoot(base_url, user_pass, true);
 
 		std::string calendar_path = GetUserCalendarPath(base_url, user_root, user_pass);
 
@@ -59,14 +60,10 @@ namespace caldav {
 
 		std::string event_data = doc.child("multistatus").first_child().child("propstat").child("prop").child("C:calendar-data").child_value();
 
-		std::cout << event_data << std::endl;
-		/*icalcomponent* event = icalparser_parse_string(event_data.c_str());
+		Todo todo = ParseIcal::ParseTodo(event_data);
 
-		if (event != 0) {
-			std::cout << icalcomponent_as_ical_string(event) << std::endl;
-		}
-
-		icalcomponent_free(event);*/
+		std::cout << todo.completed << std::endl;	
+		todo.get_day();
 	}
 
 	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {
@@ -198,7 +195,7 @@ namespace caldav {
 			curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-			
+			curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); //maybe not neccesary in the future?
 
 
 			curl_easy_setopt(curl, CURLOPT_USERPWD, user_pass.c_str()); 

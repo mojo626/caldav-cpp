@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(caldav
 	src/client.cpp
 	src/calendar.cpp
+	src/parseical.cpp
 )
 
 target_include_directories(caldav
@@ -41,6 +42,14 @@ FetchContent_Declare(
 # Must install openSSL-devel and libpsl-devel packages
 FetchContent_MakeAvailable(libcurl)
 
+FetchContent_Declare(
+  date_src
+  GIT_REPOSITORY https://github.com/HowardHinnant/date.git
+  GIT_TAG v3.0.4
+)
+
+FetchContent_MakeAvailable(date_src)
+
 file(GLOB UICAL_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/uICAL/src/*.cpp)
 
 add_library(uICAL STATIC
@@ -54,14 +63,18 @@ target_include_directories(uICAL
 )
 
 
-find_package(LibIcal REQUIRED)
 
 target_link_libraries(caldav 
 	PRIVATE 
 		pugixml 
 		libcurl 
-		ical
 		uICAL
+		date::date
+)
+
+target_include_directories(caldav
+    PUBLIC
+        ${date_src_SOURCE_DIR}/include
 )
 
 
