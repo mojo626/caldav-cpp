@@ -50,17 +50,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(date_src)
 
-file(GLOB UICAL_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/uICAL/src/*.cpp)
 
-add_library(uICAL STATIC
-	${UICAL_SRC_FILES}
-)
-
-target_include_directories(uICAL 
-	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/lib/uICAL/src
-		#${CMAKE_CURRENT_SOURCE_DIR}/lib/uICAL/src/uICAL
-)
 
 
 
@@ -68,7 +58,6 @@ target_link_libraries(caldav
 	PRIVATE 
 		pugixml 
 		libcurl 
-		uICAL
 		date::date
 )
 

@@ -63,7 +63,8 @@ namespace caldav {
 		Todo todo = ParseIcal::ParseTodo(event_data);
 
 		std::cout << todo.completed << std::endl;	
-		todo.get_day();
+
+		std::cout << todo.getDateLocal().tm_zone << std::endl;
 	}
 
 	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {

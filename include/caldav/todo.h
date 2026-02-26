@@ -41,21 +41,21 @@ namespace caldav {
 		std::string last_modified;
 		int percent_completed;
 			
-		void get_day() {
+		std::tm getDateLocal() {
 			std::istringstream in{completed};
 			std::chrono::system_clock::time_point tp;
 
 			in >> date::parse("%Y%m%dT%H%M%SZ", tp);
 
 			if (in.fail()) {
-				throw std::runtime_error("Failed to parse time: " + completed);
+				std::cerr << ("Failed to parse time: " + completed) << std::endl;
 			}		
 
-			std::tm tm = to_utc_tm(tp);
+			std::tm tm = to_local_tm(tp);
 
-			std::cout << tm.tm_year << std::endl;
 
-			//std::cout << tp << std::endl;
+			return tm;
+
 		}
 	};
 
