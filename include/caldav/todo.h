@@ -41,7 +41,7 @@ namespace caldav {
 		std::string last_modified;
 		int percent_completed;
 			
-		std::tm getDateLocal() {
+		std::tm getCompletedDateLocal() {
 			std::istringstream in{completed};
 			std::chrono::system_clock::time_point tp;
 

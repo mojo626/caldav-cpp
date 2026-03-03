@@ -25,13 +25,24 @@ namespace caldav {
 
 		std::string user_pass = "ben:" + env.get("PASSWORD");
 
-		std::string user_root = GetUserRoot(base_url, user_pass, true);
+		std::string user_root = GetUserRoot(base_url, user_pass);
 
 		std::string calendar_path = GetUserCalendarPath(base_url, user_root, user_pass);
 
 
 		std::vector<caldav::Calendar> calendars = GetCalendars(base_url, calendar_path, user_pass);
 
+
+		std::cout << base_url + calendars[0].url << std::endl;
+
+		GetTodos(base_url, user_pass, calendars[0]);
+
+
+	}
+
+
+	Todo Client::GetTodos(std::string base_url, std::string user_pass, Calendar cal, bool verbose) {
+		
 		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
 							<c:calendar-query xmlns:d=\"DAV:\" xmlns:c=\"urn:ietf:params:xml:ns:caldav\"> \
 							<d:prop> \
@@ -45,12 +56,10 @@ namespace caldav {
 							</c:filter> \
 							</c:calendar-query>";
 
-		std::cout << base_url + calendars[0].url << std::endl;
-
-		std::string events = CalDAVRequest(base_url + calendars[0].url, user_pass, 1, data, "REPORT", true);
+		std::string response =	CalDAVRequest(base_url + cal.url, user_pass, 1, data, "REPORT", verbose);
 
 		pugi::xml_document doc;
-		pugi::xml_parse_result result = doc.load_string(events.c_str());
+		pugi::xml_parse_result result = doc.load_string(response.c_str());
 
 		if (!result) {
 			throw std::runtime_error("Failed to parse XML");
@@ -60,9 +69,8 @@ namespace caldav {
 
 		Todo todo = ParseIcal::ParseTodo(event_data);
 
-		std::cout << todo.completed << std::endl;	
 
-		std::cout << todo.getDateLocal().tm_zone << std::endl;
+		return todo;
 	}
 
 	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {

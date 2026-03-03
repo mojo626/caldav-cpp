@@ -11,6 +11,7 @@ namespace caldav {
 
 		private:
 			static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
+			Todo GetTodos(std::string base_url, std::string user_pass, Calendar cal, bool verbose = false);
 			std::string GetUserRoot(std::string base_url, std::string user_pass, bool verbose = false);
 			std::string GetUserCalendarPath(std::string base_url, std::string user_root, std::string user_pass, bool verbose = false);
 			std::vector<caldav::Calendar> GetCalendars(std::string base_url, std::string calendar_path, std::string user_pass, bool verbose = false);

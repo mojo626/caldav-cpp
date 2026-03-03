@@ -16,7 +16,6 @@ namespace caldav {
 		bool in_todo = false;
 
 		while(std::getline(iss, line)) {
-			std::cout << line << std::endl;
 			std::string key = line.substr(0, line.find_first_of(":"));
 			std::string value = line.substr(line.find_first_of(":") + 1, line.length() - 1);
 
