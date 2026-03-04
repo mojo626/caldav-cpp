@@ -10,7 +10,6 @@
 #include <pugixml.hpp>
 #include <vector>
 
-//https://decovar.dev/blog/2021/03/08/cmake-cpp-library/
 
 namespace caldav {
 
@@ -20,28 +19,33 @@ namespace caldav {
 		return size * nmemb;
 	}
 
-	Client::Client(std::string base_url) : env("../.env") {
-		std::cout << "Base URL: " << base_url << std::endl;
+	Client::Client(std::string base_url, std::string user_pass) {
 
-		std::string user_pass = "ben:" + env.get("PASSWORD");
+		this->base_url = base_url;
 
-		std::string user_root = GetUserRoot(base_url, user_pass);
+		this->user_pass = user_pass;
 
-		std::string calendar_path = GetUserCalendarPath(base_url, user_root, user_pass);
+		this->user_root = GetUserRoot(base_url, user_pass);
 
-
-		std::vector<caldav::Calendar> calendars = GetCalendars(base_url, calendar_path, user_pass);
+		this->calendar_path = GetUserCalendarPath(base_url, user_root, user_pass);
 
 
-		std::cout << base_url + calendars[0].url << std::endl;
-
-		GetTodos(base_url, user_pass, calendars[0]);
-
+		this->calendars = GetCalendars(base_url, calendar_path, user_pass);
 
 	}
 
+	void Client::CheckPaths() {
+		if (user_root.empty()) {
+			user_root = GetUserRoot(base_url, user_pass);
+		}
 
-	Todo Client::GetTodos(std::string base_url, std::string user_pass, Calendar cal, bool verbose) {
+		if (calendar_path.empty()) {
+			calendar_path = GetUserCalendarPath(base_url, user_root, user_pass);
+		}
+	}
+
+
+	std::vector<caldav::Todo> Client::GetTodos(Calendar cal, bool verbose) {
 		
 		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
 							<c:calendar-query xmlns:d=\"DAV:\" xmlns:c=\"urn:ietf:params:xml:ns:caldav\"> \
@@ -65,12 +69,18 @@ namespace caldav {
 			throw std::runtime_error("Failed to parse XML");
 		}
 
-		std::string event_data = doc.child("multistatus").first_child().child("propstat").child("prop").child("C:calendar-data").child_value();
+		std::vector<Todo> todos;
 
-		Todo todo = ParseIcal::ParseTodo(event_data);
+		for (pugi::xml_node todo_response : doc.child("multistatus").children("response")) {
+			std::string todo_string = todo_response.child("propstat").child("prop").child("C:calendar-data").child_value();
+
+			Todo todo = ParseIcal::ParseTodo(todo_string);
+
+			todos.push_back(todo);
+		} 
 
 
-		return todo;
+		return todos;
 	}
 
 	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {
@@ -117,6 +127,14 @@ namespace caldav {
 		std::string user_calendar_path = doc.child("multistatus").child("response").child("propstat").child("prop").child("calendar-home-set").child("href").child_value();
 
 		return user_root;
+	}
+
+	std::vector<caldav::Calendar> Client::GetCalendars() {
+		if (calendars.empty()) {
+			this->calendars = GetCalendars(base_url, calendar_path, user_pass);
+		}
+
+		return this->calendars;
 	}
 
 	std::vector<caldav::Calendar> Client::GetCalendars(std::string base_url, std::string calendar_path, std::string user_pass, bool verbose) {
