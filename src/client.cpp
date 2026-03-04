@@ -129,6 +129,12 @@ namespace caldav {
 		return user_root;
 	}
 
+
+	/**
+	 * @brief Gets a list of calendars avilable for the user on the client 
+	 * 
+	 * @return std::vector<caldav::Calendar> list of calendars on server
+	 */
 	std::vector<caldav::Calendar> Client::GetCalendars() {
 		if (calendars.empty()) {
 			this->calendars = GetCalendars(base_url, calendar_path, user_pass);
@@ -136,6 +142,7 @@ namespace caldav {
 
 		return this->calendars;
 	}
+
 
 	std::vector<caldav::Calendar> Client::GetCalendars(std::string base_url, std::string calendar_path, std::string user_pass, bool verbose) {
 		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
@@ -182,12 +189,12 @@ namespace caldav {
 				supported_components.push_back(name);
 			}
 			
-			caldav::Calendar cal(
-					display_name,
-					url,
-					ctag,
-					supported_components,
-					color);	
+			caldav::Calendar cal{
+					display_name = display_name,
+					url = url,
+					ctag = ctag,
+					supported_components = supported_components,
+					color = color};	
 			
 			calendars.push_back(cal);
 		}

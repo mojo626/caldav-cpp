@@ -18,12 +18,12 @@ int main() {
 	//
 	std::vector<caldav::Calendar> calendars = client.GetCalendars();
 
-	std::cout << calendars[0].url << std::endl;
+	std::cout << calendars[1].display_name << std::endl;
 
-	std::vector<caldav::Todo> todos = client.GetTodos(calendars[0]);
+	std::vector<caldav::Todo> todos = client.GetTodos(calendars[1]);
 
 	for (caldav::Todo todo : todos) {
-		std::cout << (todo.status == caldav::TodoStatus::COMPLETED) << std::endl;
+		std::cout << todo.summary << std::endl;
 	}
 
 	return 0;
