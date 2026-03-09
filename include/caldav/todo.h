@@ -45,7 +45,7 @@ namespace caldav {
 			std::istringstream in{completed};
 			std::chrono::system_clock::time_point tp;
 
-			in >> date::parse("%Y%m%dT%H%M%SZ", tp);
+			date::from_stream(in, "%Y%m%dT%H%M%SZ", tp);
 
 			if (in.fail()) {
 				std::cerr << ("Failed to parse time: " + completed) << std::endl;

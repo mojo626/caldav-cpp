@@ -23,7 +23,7 @@ int main() {
 	std::vector<caldav::Todo> todos = client.GetTodos(calendars[1]);
 
 	for (caldav::Todo todo : todos) {
-		std::cout << todo.summary << std::endl;
+		std::cout << "Local completed hour: " << todo.getCompletedDateLocal().tm_hour << std::endl;
 	}
 
 	return 0;
