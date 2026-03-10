@@ -19,6 +19,10 @@ namespace caldav {
 		return size * nmemb;
 	}
 
+	Client::Client() {
+		
+	}
+
 	Client::Client(std::string base_url, std::string user_pass) {
 
 		this->base_url = base_url;
