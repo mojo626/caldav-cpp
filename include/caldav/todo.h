@@ -25,7 +25,7 @@ namespace caldav {
 		int percent_completed;
 			
 		std::tm getCompletedDateLocal() {	
-			auto tp = TimeUtils::tm_from_format(completed, "%Y%m%dT%H%M%SZ");
+			auto tp = TimeUtils::tp_from_format(completed, "%Y%m%dT%H%M%SZ");
 
 			std::tm tm = TimeUtils::to_local_tm(tp);
 

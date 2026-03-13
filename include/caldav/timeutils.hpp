@@ -33,11 +33,11 @@ namespace caldav {
         * 
         * @return std::chrono::system_clock::time_point parsed time point
         */
-        static std::chrono::system_clock::time_point tm_from_format(std::string data, std::string format) {
+        static std::chrono::system_clock::time_point tp_from_format(std::string data, std::string format) {
             std::istringstream in{data};
 			std::chrono::system_clock::time_point tp;
 
-			date::from_stream(in, "%Y%m%dT%H%M%SZ", tp);
+			date::from_stream(in, format.c_str(), tp);
 
 			if (in.fail()) {
 				std::cerr << ("Failed to parse time: " + data) << std::endl;

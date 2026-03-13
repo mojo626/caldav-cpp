@@ -1,4 +1,5 @@
 #pragma once
+#include "caldav/timeutils.hpp"
 #include <string>
 #include <date/date.h>
 
@@ -13,5 +14,19 @@ namespace caldav {
         std::string dtstart;
         std::string dtend;
         std::string time_zone;
+
+        std::tm getStartLocal() {
+            std::chrono::system_clock::time_point tp;
+
+            if (!time_zone.empty()) {
+                tp = TimeUtils::tp_from_format(dtstart, "%Y%m%dT%H%M%S");
+            } else {
+                tp = TimeUtils::tp_from_format(dtstart, "%Y%m%d");
+            }
+
+            std::tm tm = TimeUtils::to_local_tm(tp);
+            
+            return tm;
+        }
     };
 }
