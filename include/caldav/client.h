@@ -7,8 +7,7 @@
 namespace caldav {
 	class Client {
 		public:
-			Client();
-			Client(std::string base_url, std::string user_pass);
+			Client(std::string base_url, std::string user_pass, std::string prod_id = "-//caldav-cpp.//CalDAV Client//EN");
 			std::string CalDAVRequest(std::string url, std::string user_pass, int depth, std::string data, std::string method = "PROPFIND", bool verbose = false);
 			std::vector<caldav::Calendar> GetCalendars();
 			std::vector<caldav::Todo> GetTodos(Calendar cal, bool verbose = false);
@@ -26,6 +25,7 @@ namespace caldav {
 			std::string user_pass;
 			std::string user_root;
 			std::string calendar_path;
+			std::string prod_id;
 			std::vector<caldav::Calendar> calendars;
 	};
 }

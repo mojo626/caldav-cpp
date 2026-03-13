@@ -4,6 +4,8 @@
 #include <sstream>
 #include "caldav/event.h"
 #include "caldav/todo.h"
+#include "icalcomponent.h"
+#include <libical/ical.h>
 
 namespace caldav {
 	
@@ -74,73 +76,17 @@ namespace caldav {
 	caldav::Event ParseIcal::ParseEvent(std::string data) {
 		Event event;
 
-		//std::cout << data << std::endl << std::endl;
+		icalcomponent* component = icalparser_parse_string(data.c_str());
 
-		std::istringstream iss(data);
-		std::string line;
+		std::cout << icalcomponent_as_ical_string(component) << std::endl;
 
-		bool in_event = false;
-
-		while(std::getline(iss, line)) {
-			std::string key = line.substr(0, line.find_first_of(":"));
-			std::string value = line.substr(line.find_first_of(":") + 1, line.length() - 1);
-
-			if (key == "BEGIN" && value == "VEVENT") {
-				in_event = true;
-			}
-
-			if (key == "END" && value == "VEVENT") {
-				in_event = false;
-			}
-
-			if (!in_event) {
-				continue;
-			}
-
-
-			if (key == "SUMMARY") {
-				event.summary = value;	
-			} else if (key == "UID") {
-				event.uid = value;
-			} else if (key == "CREATED") {
-				event.created = value;
-			} else if (key == "DTSTAMP") {
-				event.dtstamp = value;
-			} else if (key == "LAST-MODIFIED") {
-				event.last_modified = value;
-			} else if (IsPrefix("DTSTART", key)) {
-
-				//Whether the start of the event is a time or date (is the event full-day)
-				//Can either be something like "TZID=America/Los_Angeles" for time or "VALUE=DATE" for a full-day event
-				std::string start_data = key.substr(key.find_first_of(";") + 1, key.length() - 1);
-
-				std::string start_type = start_data.substr(0, start_data.find_first_of("="));
-				std::string start_value = start_data.substr(start_data.find_first_of("=") + 1, start_data.length() - 1);
-
-				if (start_type == "VALUE" && start_value == "DATE") {
-					event.dtstart = value;
-				} else if (start_type == "TZID") {
-					event.dtstart = value;
-					event.time_zone = start_value;
-				}
-			} else if (IsPrefix("DTEND", key)) {
-
-				//Whether the end of the event is a time or date (is the event full-day)
-				//Can either be something like "TZID=America/Los_Angeles" for time or "VALUE=DATE" for a full-day event
-				std::string end_data = key.substr(key.find_first_of(";") + 1, key.length() - 1);
-
-				std::string end_type = end_data.substr(0, end_data.find_first_of("="));
-				std::string end_value = end_data.substr(end_data.find_first_of("=") + 1, end_data.length() - 1);
-
-				if (end_type == "VALUE" && end_value == "DATE") {
-					event.dtend = value;
-				} else if (end_type == "TZID") {
-					event.dtend = value;
-					event.time_zone = end_value;
-				}
-			}
-		}
+		event.uid = icalcomponent_get_uid(component);
+		event.summary = icalcomponent_get_summary(component);
+		event.dtstamp = icalcomponent_get_dtstamp(component);
+		event.dtstart = icalcomponent_get_dtstart(component);
+		event.dtend = icalcomponent_get_dtend(component);
 		
 		return event;
 	}
+
 }

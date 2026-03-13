@@ -14,7 +14,7 @@ int main() {
 
 	caldav::Client client("https://calendar.benjaynes.com", user_pass);
 	//caldav::Client client("http://10.0.0.82:5232");
-	//
+	
 	std::vector<caldav::Calendar> calendars = client.GetCalendars();
 
 	std::cout << calendars[1].display_name << std::endl;
@@ -29,10 +29,9 @@ int main() {
 	std::vector<caldav::Event> events = client.GetEvents(calendars[1]);
 
 	for (caldav::Event event : events) {
-		std::cout << event.getStartLocal().tm_zone << std::endl;
+		std::cout << event.summary << ": " <<  event.dtstart.day << std::endl;
 	}
 
-	
 
-	return 0;
+	return 0; 
 }

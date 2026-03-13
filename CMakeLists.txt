@@ -49,6 +49,17 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(date_src)
 
+set(ICAL_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(ICAL_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(ICAL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+  libical
+  GIT_REPOSITORY https://github.com/libical/libical.git
+  GIT_TAG v3.0.20
+)
+
+FetchContent_MakeAvailable(libical)
 
 
 
@@ -58,6 +69,9 @@ target_link_libraries(caldav
 		pugixml 
 		libcurl 
 		date::date
+        ical
+        icalss
+        icalvcal
 )
 
 target_include_directories(caldav
@@ -65,6 +79,14 @@ target_include_directories(caldav
         ${date_src_SOURCE_DIR}/include
 )
 
+target_include_directories(caldav
+    PUBLIC
+        ${libical_SOURCE_DIR}/src/libical
+        ${libical_BINARY_DIR}/src/libical
+        ${libical_SOURCE_DIR}/src
+        ${libical_BINARY_DIR}/src
+        ${libical_SOURCE_DIR}/src/libicalss
+)
 
 
 # Testing
@@ -75,3 +97,5 @@ add_executable(test
 target_link_libraries(test
     PRIVATE caldav
 )
+
+

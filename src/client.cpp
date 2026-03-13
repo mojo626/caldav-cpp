@@ -9,6 +9,7 @@
 #include "curl/easy.h"
 #include <pugixml.hpp>
 #include <vector>
+#include <libical/ical.h>
 
 
 namespace caldav {
@@ -19,15 +20,14 @@ namespace caldav {
 		return size * nmemb;
 	}
 
-	Client::Client() {
-		
-	}
 
-	Client::Client(std::string base_url, std::string user_pass) {
+	Client::Client(std::string base_url, std::string user_pass, std::string prod_id) {
 
 		this->base_url = base_url;
 
 		this->user_pass = user_pass;
+
+		this->prod_id = prod_id;
 
 		this->user_root = GetUserRoot(base_url, user_pass);
 
