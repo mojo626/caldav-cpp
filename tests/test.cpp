@@ -20,11 +20,15 @@ int main() {
 
 	std::cout << calendars[1].display_name << std::endl;
 
-	std::vector<caldav::Todo> todos = client.GetTodos(calendars[1]);
+	// std::vector<caldav::Todo> todos = client.GetTodos(calendars[1]);
 
-	for (caldav::Todo todo : todos) {
-		std::cout << "Local completed hour: " << todo.getCompletedDateLocal().tm_hour << std::endl;
-	}
+	// for (caldav::Todo todo : todos) {
+	// 	std::cout << "Local completed hour: " << todo.getCompletedDateLocal().tm_hour << std::endl;
+	// }
+
+	std::vector<std::string> events = client.GetEvents(calendars[1]);
+
+	std::cout << events[12] << std::endl;
 
 	return 0;
 }

@@ -1,5 +1,6 @@
 #include "caldav/client.h"
 #include "caldav/calendar.h"
+#include "caldav/event.h"
 #include "caldav/parseical.h"
 #include <string>
 #include <iostream>
@@ -32,7 +33,6 @@ namespace caldav {
 		this->user_root = GetUserRoot(base_url, user_pass);
 
 		this->calendar_path = GetUserCalendarPath(base_url, user_root, user_pass);
-
 
 		this->calendars = GetCalendars(base_url, calendar_path, user_pass);
 
@@ -85,6 +85,46 @@ namespace caldav {
 
 
 		return todos;
+	}
+
+	std::vector<caldav::Event> Client::GetEvents(Calendar cal, bool verbose) {
+		
+		std::string data = "<?xml version=\"1.0\" encoding=\"utf-8\" ?> \
+							<c:calendar-query xmlns:d=\"DAV:\" xmlns:c=\"urn:ietf:params:xml:ns:caldav\"> \
+							<d:prop> \
+							<d:getetag/> \
+							<c:calendar-data/> \
+							</d:prop> \
+							<c:filter> \
+							<c:comp-filter name=\"VCALENDAR\"> \
+							<c:comp-filter name=\"VEVENT\" /> \
+							</c:comp-filter> \
+							</c:filter> \
+							</c:calendar-query>";
+
+		std::string response =	CalDAVRequest(base_url + cal.url, user_pass, 1, data, "REPORT", verbose);
+
+		pugi::xml_document doc;
+		pugi::xml_parse_result result = doc.load_string(response.c_str());
+
+		if (!result) {
+			throw std::runtime_error("Failed to parse XML");
+		}
+
+		std::vector<caldav::Event> events;
+
+		for (pugi::xml_node event_response : doc.child("multistatus").children("response")) {
+			std::string event_string = event_response.child("propstat").child("prop").child("C:calendar-data").child_value();
+
+			caldav::Event event;
+
+			//NEED TO ACTUALLY PARSE THE EVENT
+
+			events.push_back(event);
+		} 
+
+
+		return events;
 	}
 
 	std::string Client::GetUserRoot(std::string base_url, std::string user_pass, bool verbose) {

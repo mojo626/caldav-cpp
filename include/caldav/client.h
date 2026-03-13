@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "caldav/calendar.h"
+#include "caldav/event.h"
 #include "dotenv.h"
 
 namespace caldav {
@@ -11,6 +13,7 @@ namespace caldav {
 			std::string CalDAVRequest(std::string url, std::string user_pass, int depth, std::string data, std::string method = "PROPFIND", bool verbose = false);
 			std::vector<caldav::Calendar> GetCalendars();
 			std::vector<caldav::Todo> GetTodos(Calendar cal, bool verbose = false);
+			std::vector<caldav::Event> GetEvents(Calendar cal, bool verbose = false);
 
 		private:
 			static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
