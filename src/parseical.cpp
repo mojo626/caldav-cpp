@@ -1,7 +1,5 @@
 #include "caldav/parseical.h"
 #include <algorithm>
-#include <cstddef>
-#include <iostream>
 #include <string>
 #include <sstream>
 #include "caldav/event.h"
@@ -15,22 +13,7 @@ namespace caldav {
 		return res.first == shortStr.end();
 	}
 
-	static std::tm to_utc_tm(std::chrono::system_clock::time_point tp) {
-		std::time_t tt = std::chrono::system_clock::to_time_t(tp);
 
-		std::tm tm{};
-		gmtime_r(&tt, &tm); // thread-safe UTC (macOS & Linux)
-
-		return tm;
-	}
-
-	static std::tm to_local_tm(std::chrono::system_clock::time_point tp) {
-		std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-
-		std::tm tm{};
-		localtime_r(&tt, &tm); // local timezone
-		return tm;
-	}
 
 	caldav::Todo ParseIcal::ParseTodo(std::string data) {
 		Todo todo;

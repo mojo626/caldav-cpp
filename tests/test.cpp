@@ -1,9 +1,7 @@
 #include "caldav/calendar.h"
 #include "caldav/client.h"
 #include "caldav/event.h"
-#include "caldav/todo.h"
 #include "dotenv.h"
-#include "caldav/parseical.h"
 #include <iostream>
 #include <vector>
 

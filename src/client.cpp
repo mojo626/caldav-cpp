@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include "curl/curl.h"
 #include "curl/easy.h"
-#include "dotenv.h"
 #include <pugixml.hpp>
 #include <vector>
 
@@ -299,22 +298,5 @@ namespace caldav {
 
 		return "";
 
-	}
-
-	std::tm to_utc_tm(std::chrono::system_clock::time_point tp) {
-		std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-
-		std::tm tm{};
-		gmtime_r(&tt, &tm); // thread-safe UTC (macOS & Linux)
-
-		return tm;
-	}
-
-	std::tm to_local_tm(std::chrono::system_clock::time_point tp) {
-		std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-
-		std::tm tm{};
-		localtime_r(&tt, &tm); // local timezone
-		return tm;
 	}
 }

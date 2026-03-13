@@ -3,7 +3,6 @@
 #include <vector>
 #include "caldav/calendar.h"
 #include "caldav/event.h"
-#include "dotenv.h"
 
 namespace caldav {
 	class Client {

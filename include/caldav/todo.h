@@ -1,11 +1,8 @@
 #pragma once
-#include "caldav/calendar.h"
 #include "caldav/timeutils.hpp"
 #include <string>
 #include <chrono>
-#include <sstream>
 #include <date/date.h>
-#include <iostream>
 #include <ctime>
 
 namespace caldav {
