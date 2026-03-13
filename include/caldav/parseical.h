@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <string>
 #include "caldav/event.h"
 #include "caldav/todo.h"
@@ -8,5 +9,7 @@ namespace caldav {
 		public:
 			static caldav::Todo ParseTodo(std::string data);
 			static caldav::Event ParseEvent(std::string data);
+		private:
+			static bool IsPrefix(std::string shortStr, std::string longStr);
 	};
 }

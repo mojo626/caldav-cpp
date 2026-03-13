@@ -1,4 +1,6 @@
 #pragma once
+#include "caldav/calendar.h"
+#include "caldav/timeutils.hpp"
 #include <string>
 #include <chrono>
 #include <sstream>
@@ -14,22 +16,6 @@ namespace caldav {
 		CANCELLED
 	};
 
-	static std::tm to_utc_tm(std::chrono::system_clock::time_point tp) {
-		std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-
-		std::tm tm{};
-		gmtime_r(&tt, &tm); // thread-safe UTC (macOS & Linux)
-
-		return tm;
-	}
-
-	static std::tm to_local_tm(std::chrono::system_clock::time_point tp) {
-		std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-
-		std::tm tm{};
-		localtime_r(&tt, &tm); // local timezone
-		return tm;
-	}
 
 	struct Todo {
 		std::string uid;
@@ -41,18 +27,10 @@ namespace caldav {
 		std::string last_modified;
 		int percent_completed;
 			
-		std::tm getCompletedDateLocal() {
-			std::istringstream in{completed};
-			std::chrono::system_clock::time_point tp;
+		std::tm getCompletedDateLocal() {	
+			auto tp = TimeUtils::tm_from_format(completed, "%Y%m%dT%H%M%SZ");
 
-			date::from_stream(in, "%Y%m%dT%H%M%SZ", tp);
-
-			if (in.fail()) {
-				std::cerr << ("Failed to parse time: " + completed) << std::endl;
-			}		
-
-			std::tm tm = to_local_tm(tp);
-
+			std::tm tm = TimeUtils::to_local_tm(tp);
 
 			return tm;
 

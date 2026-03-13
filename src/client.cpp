@@ -116,9 +116,7 @@ namespace caldav {
 		for (pugi::xml_node event_response : doc.child("multistatus").children("response")) {
 			std::string event_string = event_response.child("propstat").child("prop").child("C:calendar-data").child_value();
 
-			caldav::Event event;
-
-			//NEED TO ACTUALLY PARSE THE EVENT
+			caldav::Event event = ParseIcal::ParseEvent(event_string);
 
 			events.push_back(event);
 		} 
@@ -301,5 +299,22 @@ namespace caldav {
 
 		return "";
 
+	}
+
+	std::tm to_utc_tm(std::chrono::system_clock::time_point tp) {
+		std::time_t tt = std::chrono::system_clock::to_time_t(tp);
+
+		std::tm tm{};
+		gmtime_r(&tt, &tm); // thread-safe UTC (macOS & Linux)
+
+		return tm;
+	}
+
+	std::tm to_local_tm(std::chrono::system_clock::time_point tp) {
+		std::time_t tt = std::chrono::system_clock::to_time_t(tp);
+
+		std::tm tm{};
+		localtime_r(&tt, &tm); // local timezone
+		return tm;
 	}
 }

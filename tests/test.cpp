@@ -1,5 +1,6 @@
 #include "caldav/calendar.h"
 #include "caldav/client.h"
+#include "caldav/event.h"
 #include "caldav/todo.h"
 #include "dotenv.h"
 #include "caldav/parseical.h"
@@ -26,9 +27,13 @@ int main() {
 	// 	std::cout << "Local completed hour: " << todo.getCompletedDateLocal().tm_hour << std::endl;
 	// }
 
-	std::vector<std::string> events = client.GetEvents(calendars[1]);
+	std::vector<caldav::Event> events = client.GetEvents(calendars[1]);
 
-	std::cout << events[12] << std::endl;
+	for (caldav::Event event : events) {
+		std::cout << event.dtstart << std::endl;
+	}
+
+	
 
 	return 0;
 }
