@@ -78,8 +78,6 @@ namespace caldav {
 
 		icalcomponent* component = icalparser_parse_string(data.c_str());
 
-		std::cout << icalcomponent_as_ical_string(component) << std::endl;
-
 		event.uid = icalcomponent_get_uid(component);
 		event.summary = icalcomponent_get_summary(component);
 		event.dtstamp = icalcomponent_get_dtstamp(component);
