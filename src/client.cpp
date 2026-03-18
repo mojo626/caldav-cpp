@@ -114,8 +114,10 @@ namespace caldav {
 
 		for (pugi::xml_node event_response : doc.child("multistatus").children("response")) {
 			std::string event_string = event_response.child("propstat").child("prop").child("C:calendar-data").child_value();
+			std::string etag = event_response.child("propstat").child("prop").child("getetag").child_value();
+			etag = etag.substr(1, etag.length() - 2);
 
-			caldav::Event event = ParseIcal::ParseEvent(event_string);
+			caldav::Event event = ParseIcal::ParseEvent(event_string, etag);
 
 			events.push_back(event);
 		} 

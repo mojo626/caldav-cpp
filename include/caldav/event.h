@@ -9,6 +9,7 @@ namespace caldav {
     struct Event {
         std::string uid;
         std::string summary;
+        std::string etag;
         icaltimetype dtstamp;
         icaltimetype dtstart;
         icaltimetype dtend;

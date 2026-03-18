@@ -73,7 +73,7 @@ namespace caldav {
 
 	}
 
-	caldav::Event ParseIcal::ParseEvent(std::string data) {
+	caldav::Event ParseIcal::ParseEvent(std::string data, std::string etag) {
 		Event event;
 
 		icalcomponent* component = icalparser_parse_string(data.c_str());
@@ -83,6 +83,7 @@ namespace caldav {
 		event.dtstamp = icalcomponent_get_dtstamp(component);
 		event.dtstart = icalcomponent_get_dtstart(component);
 		event.dtend = icalcomponent_get_dtend(component);
+		event.etag = etag;
 		
 		return event;
 	}
