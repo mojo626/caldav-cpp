@@ -3,6 +3,7 @@
 #include <vector>
 #include "caldav/calendar.h"
 #include "caldav/event.h"
+#include "caldav/todo.h"
 
 namespace caldav {
 	class Client {
@@ -12,6 +13,7 @@ namespace caldav {
 			std::vector<caldav::Calendar> GetCalendars();
 			std::vector<caldav::Todo> GetTodos(Calendar cal, bool verbose = false);
 			std::vector<caldav::Event> GetEvents(Calendar cal, bool verbose = false);
+			int CreateNewTodo(caldav::Todo newTodo, Calendar cal, bool verbose = false);
 
 		private:
 			static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);

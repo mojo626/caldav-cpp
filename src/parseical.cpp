@@ -5,6 +5,7 @@
 #include "caldav/event.h"
 #include "caldav/todo.h"
 #include "icalcomponent.h"
+#include "icalderivedproperty.h"
 #include <libical/ical.h>
 
 namespace caldav {
@@ -86,6 +87,35 @@ namespace caldav {
 		event.etag = etag;
 		
 		return event;
+	}
+
+	std::string ParseIcal::TodoToIcal(caldav::Todo todo, std::string prod_id) {
+		icalcomponent* vcal = icalcomponent_new(ICAL_VCALENDAR_COMPONENT);
+
+		icalcomponent_add_property(vcal, 
+			icalproperty_new_version("2.0"));
+		
+		icalcomponent_add_property(vcal, 
+			icalproperty_new_calscale("GREGORIAN"));
+
+		icalcomponent_add_property(vcal, 
+			icalproperty_new_prodid(prod_id.c_str()));
+
+		icalcomponent* vtodo = icalcomponent_new(ICAL_VTODO_COMPONENT);
+
+		icalcomponent_add_property(vtodo,
+			icalproperty_new_summary(todo.summary.c_str()));
+
+		icalcomponent_add_property(vtodo,
+			icalproperty_new_uid(todo.uid.c_str()));
+
+		//icalcomponent_add_property(vtodo, icalproperty_new_completed(todo.completed));
+
+		icalcomponent_add_component(vcal, vtodo);
+
+		char* ics = icalcomponent_as_ical_string(vcal);
+
+		return ics;
 	}
 
 }

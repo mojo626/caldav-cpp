@@ -47,6 +47,30 @@ namespace caldav {
 		}
 	}
 
+	//simple todo
+	// BEGIN:VCALENDAR
+	// VERSION:2.0
+	// CALSCALE:GREGORIAN
+	// PRODID:-//Apple Inc.//iOS 26.0.1//EN
+	// BEGIN:VTODO
+	// COMPLETED:20251023T191719Z
+	// CREATED:20251023T081604Z
+	// DTSTAMP:20251024T004846Z
+	// LAST-MODIFIED:20251023T191719Z
+	// PERCENT-COMPLETE:100
+	// STATUS:COMPLETED
+	// SUMMARY:Agenda for Friday
+	// UID:C6A88262-EDDC-48A6-A756-AB363628AB50
+	// END:VTODO
+	// END:VCALENDAR
+
+	int Client::CreateNewTodo(caldav::Todo newTodo, Calendar cal, bool verbose) {
+		std::string ics = ParseIcal::TodoToIcal(newTodo, this->prod_id);
+
+		std::cout << ics << std::endl;
+
+		return 1;
+	}
 
 	std::vector<caldav::Todo> Client::GetTodos(Calendar cal, bool verbose) {
 		

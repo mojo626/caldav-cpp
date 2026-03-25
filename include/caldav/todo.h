@@ -4,6 +4,7 @@
 #include <chrono>
 #include <date/date.h>
 #include <ctime>
+#include <libical/ical.h>
 
 namespace caldav {
 	enum TodoStatus {
