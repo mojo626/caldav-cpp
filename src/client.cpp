@@ -10,6 +10,7 @@
 #include <pugixml.hpp>
 #include <vector>
 #include <libical/ical.h>
+#include <uuid/uuid.h>
 
 
 namespace caldav {
@@ -47,10 +48,41 @@ namespace caldav {
 		}
 	}
 
-	int Client::CreateNewTodo(caldav::Todo newTodo, Calendar cal, bool verbose) {
-		std::string ics = ParseIcal::TodoToIcal(newTodo, this->prod_id);
+	int Client::CreateNewTodo(std::string summary, icalproperty_status status, Calendar cal, bool verbose) {
+		caldav::Todo todo;
+
+		todo.summary = summary;
+		if (status == icalproperty_status::ICAL_STATUS_COMPLETED) {
+			todo.completed = icaltime_current_time_with_zone(icaltimezone_get_utc_timezone());
+		}
+		todo.created = icaltime_current_time_with_zone(icaltimezone_get_utc_timezone());
+		todo.dtstamp = icaltime_current_time_with_zone(icaltimezone_get_utc_timezone());
+		todo.last_modified = icaltime_current_time_with_zone(icaltimezone_get_utc_timezone());
+		todo.percent_completed = status == icalproperty_status::ICAL_STATUS_COMPLETED ? 100 : 0;
+		todo.status = status;
+		
+		
+		uuid_t uuid;
+		uuid_generate_random(uuid); 
+
+		char uuid_str[37]; 
+		uuid_unparse_lower(uuid, uuid_str);
+
+		std::string cpp_uuid(uuid_str);
+
+		std::cout << cpp_uuid << std::endl;
+
+
+		todo.uid = uuid_str;
+
+		std::string ics = ParseIcal::TodoToIcal(todo, this->prod_id);
 
 		std::cout << ics << std::endl;
+		std::string response = PutRequest(this->base_url + cal.url + uuid_str + ".ics", this->user_pass, ics, verbose);
+
+		if (response == "") {
+			return 0;
+		}
 
 		return 1;
 	}
@@ -253,6 +285,41 @@ namespace caldav {
 
 
 		return calendars;
+	}
+
+	std::string Client::PutRequest(std::string url, std::string user_pass, std::string data, bool verbose) {
+		CURL *curl;
+		CURLcode res;
+		std::string readBuffer;
+
+		curl = curl_easy_init();
+
+		if (curl) {
+			curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+			curl_easy_setopt(curl, CURLOPT_USERPWD, user_pass.c_str()); 
+			curl_easy_setopt(curl, CURLOPT_VERBOSE, verbose ? 1L : 0L);
+
+			struct curl_slist* headers = nullptr;
+			headers = curl_slist_append(headers, "Content-Type: text/calendar");
+			headers = curl_slist_append(headers, "If-None-Match: *");
+
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+			res = curl_easy_perform(curl);
+
+			if (res != CURLE_OK) {
+				std::cerr << "curl error: " << curl_easy_strerror(res) << std::endl;
+				return "";
+			}
+
+
+			return readBuffer;
+		}
+
+
+		return "";
 	}
 
 	/**

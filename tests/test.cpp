@@ -2,6 +2,7 @@
 #include "caldav/client.h"
 #include "caldav/event.h"
 #include "dotenv.h"
+#include "ical.h"
 #include <iostream>
 #include <vector>
 
@@ -22,9 +23,9 @@ int main() {
 
 	std::vector<caldav::Todo> todos = client.GetTodos(calendars[1]);
 
-	for (caldav::Todo todo : todos) {
-		std::cout << "Local completed hour: " << todo.completed.hour << std::endl;
-	}
+	// for (caldav::Todo todo : todos) {
+	// 	std::cout << "Local completed hour: " << todo.completed.hour << std::endl;
+	// }
 
 	// std::vector<caldav::Event> events = client.GetEvents(calendars[1]);
 
@@ -32,9 +33,9 @@ int main() {
 	// 	std::cout << event.summary << ": " <<  event.dtstart.day << std::endl;
 	// }
 
-	caldav::Todo todo;
+	
 
-	client.CreateNewTodo(todos[0], calendars[2]);
+	client.CreateNewTodo("testing new todo", icalproperty_status::ICAL_STATUS_NEEDSACTION, calendars[2], true);
 
 
 	return 0; 

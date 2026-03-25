@@ -1,5 +1,6 @@
 #include "caldav/parseical.h"
 #include <algorithm>
+#include <cstddef>
 #include <string>
 #include <sstream>
 #include "caldav/event.h"
@@ -20,6 +21,7 @@ namespace caldav {
 
 
 	caldav::Todo ParseIcal::ParseTodo(std::string data, std::string etag) {
+		std::cout << data << std::endl;
 		Todo todo;
 
 		icalcomponent* component = icalparser_parse_string(data.c_str());
@@ -80,8 +82,11 @@ namespace caldav {
 		icalcomponent_add_property(vtodo,
 			icalproperty_new_uid(todo.uid.c_str()));
 
-		icalcomponent_add_property(vtodo, 
-			icalproperty_new_completed(todo.completed));
+		if (todo.status == icalproperty_status::ICAL_STATUS_COMPLETED) {
+			icalcomponent_add_property(vtodo, 
+				icalproperty_new_completed(todo.completed));
+		}
+			
 
 		icalcomponent_add_property(vtodo, 
 			icalproperty_new_created(todo.created));
