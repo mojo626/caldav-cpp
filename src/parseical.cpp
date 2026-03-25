@@ -6,6 +6,7 @@
 #include "caldav/todo.h"
 #include "icalcomponent.h"
 #include "icalderivedproperty.h"
+#include "icalparser.h"
 #include <libical/ical.h>
 
 namespace caldav {
@@ -18,57 +19,25 @@ namespace caldav {
 
 
 
-	caldav::Todo ParseIcal::ParseTodo(std::string data) {
+	caldav::Todo ParseIcal::ParseTodo(std::string data, std::string etag) {
 		Todo todo;
 
-		std::istringstream iss(data);
-		std::string line;
+		icalcomponent* component = icalparser_parse_string(data.c_str());
 
-		bool in_todo = false;
+		icalcomponent* vtodo = icalcomponent_get_first_component(component, ICAL_VTODO_COMPONENT);
 
-		while(std::getline(iss, line)) {
-			std::string key = line.substr(0, line.find_first_of(":"));
-			std::string value = line.substr(line.find_first_of(":") + 1, line.length() - 1);
+		todo.uid = icalcomponent_get_uid(vtodo);
+		todo.etag = etag;
+		todo.summary = icalcomponent_get_summary(vtodo);
+		todo.status = icalcomponent_get_status(vtodo);
+		todo.completed = icalproperty_get_completed(icalcomponent_get_first_property(vtodo, ICAL_COMPLETED_PROPERTY));
+		todo.created = icalproperty_get_created(icalcomponent_get_first_property(vtodo, ICAL_CREATED_PROPERTY));
+		todo.dtstamp = icalproperty_get_dtstamp(icalcomponent_get_first_property(vtodo, ICAL_DTSTAMP_PROPERTY));
+		todo.last_modified = icalproperty_get_lastmodified(icalcomponent_get_first_property(vtodo, ICAL_LASTMODIFIED_PROPERTY));
+		todo.percent_completed = icalproperty_get_percentcomplete(icalcomponent_get_first_property(vtodo, ICAL_PERCENTCOMPLETE_PROPERTY));
 
-			if (key == "BEGIN" && value == "VTODO") {
-				in_todo = true;
-			}
-
-			if (key == "END" && value == "VTODO") {
-				in_todo = false;
-			}
-
-			if (!in_todo) {
-				continue;
-			}
-
-
-			if (key == "SUMMARY") {
-				todo.summary = value;	
-			} else if (key == "STATUS") {
-				if (value == "COMPLETED") {
-					todo.status = TodoStatus::COMPLETED;
-				} else if (value == "IN-PROGRESS") {
-					todo.status = TodoStatus::IN_PROGRESS;
-				} else if (value == "NEEDS-ACTION") {
-					todo.status = TodoStatus::NEEDS_ACTION;
-				} else if (value == "CANCELLED") {
-					todo.status = TodoStatus::CANCELLED;
-				}
-			} else if (key == "COMPLETED") {
-				todo.completed = value;
-			} else if (key == "CREATED") {
-				todo.created = value;
-			} else if (key == "DTSTAMP") {
-				todo.dtstamp = value;
-			} else if (key == "LAST-MODIFIED") {
-				todo.last_modified = value;
-			} else if (key == "UID") {
-				todo.uid = value;
-			} else if (key == "PERCENT-COMPLETE") {
-				todo.percent_completed = std::stoi(value);
-			}
-		}
+		icalcomponent_free(vtodo);
+		icalcomponent_free(component);
 
 		return todo;
 
@@ -85,6 +54,8 @@ namespace caldav {
 		event.dtstart = icalcomponent_get_dtstart(component);
 		event.dtend = icalcomponent_get_dtend(component);
 		event.etag = etag;
+
+		icalcomponent_free(component);
 		
 		return event;
 	}
@@ -109,11 +80,30 @@ namespace caldav {
 		icalcomponent_add_property(vtodo,
 			icalproperty_new_uid(todo.uid.c_str()));
 
-		//icalcomponent_add_property(vtodo, icalproperty_new_completed(todo.completed));
+		icalcomponent_add_property(vtodo, 
+			icalproperty_new_completed(todo.completed));
+
+		icalcomponent_add_property(vtodo, 
+			icalproperty_new_created(todo.created));
+
+		icalcomponent_add_property(vtodo, 
+			icalproperty_new_dtstamp(todo.dtstamp));
+
+		icalcomponent_add_property(vtodo, 
+			icalproperty_new_lastmodified(todo.last_modified));
+
+		icalcomponent_add_property(vtodo, 
+			icalproperty_new_status(todo.status));
+
+		icalcomponent_add_property(vtodo, 
+			icalproperty_new_percentcomplete(todo.percent_completed));
 
 		icalcomponent_add_component(vcal, vtodo);
 
 		char* ics = icalcomponent_as_ical_string(vcal);
+
+		icalcomponent_free(vtodo);
+		icalcomponent_free(vcal);
 
 		return ics;
 	}

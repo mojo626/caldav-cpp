@@ -22,9 +22,9 @@ int main() {
 
 	std::vector<caldav::Todo> todos = client.GetTodos(calendars[1]);
 
-	// for (caldav::Todo todo : todos) {
-	// 	std::cout << "Local completed hour: " << todo.created << std::endl;
-	// }
+	for (caldav::Todo todo : todos) {
+		std::cout << "Local completed hour: " << todo.completed.hour << std::endl;
+	}
 
 	// std::vector<caldav::Event> events = client.GetEvents(calendars[1]);
 

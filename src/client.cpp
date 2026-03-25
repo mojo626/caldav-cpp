@@ -47,23 +47,6 @@ namespace caldav {
 		}
 	}
 
-	//simple todo
-	// BEGIN:VCALENDAR
-	// VERSION:2.0
-	// CALSCALE:GREGORIAN
-	// PRODID:-//Apple Inc.//iOS 26.0.1//EN
-	// BEGIN:VTODO
-	// COMPLETED:20251023T191719Z
-	// CREATED:20251023T081604Z
-	// DTSTAMP:20251024T004846Z
-	// LAST-MODIFIED:20251023T191719Z
-	// PERCENT-COMPLETE:100
-	// STATUS:COMPLETED
-	// SUMMARY:Agenda for Friday
-	// UID:C6A88262-EDDC-48A6-A756-AB363628AB50
-	// END:VTODO
-	// END:VCALENDAR
-
 	int Client::CreateNewTodo(caldav::Todo newTodo, Calendar cal, bool verbose) {
 		std::string ics = ParseIcal::TodoToIcal(newTodo, this->prod_id);
 
@@ -100,8 +83,10 @@ namespace caldav {
 
 		for (pugi::xml_node todo_response : doc.child("multistatus").children("response")) {
 			std::string todo_string = todo_response.child("propstat").child("prop").child("C:calendar-data").child_value();
+			std::string etag = todo_response.child("propstat").child("prop").child("getetag").child_value();
+			etag = etag.substr(1, etag.length() - 2);
 
-			Todo todo = ParseIcal::ParseTodo(todo_string);
+			Todo todo = ParseIcal::ParseTodo(todo_string, etag);
 
 			todos.push_back(todo);
 		} 
