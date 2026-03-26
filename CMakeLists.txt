@@ -62,7 +62,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(libical)
 
 
-
+find_library(UUID_LIBRARIES NAMES uuid)
 
 target_link_libraries(caldav 
 	PRIVATE 
@@ -72,6 +72,7 @@ target_link_libraries(caldav
         ical
         icalss
         icalvcal
+		${UUID_LIBRARIES}
 )
 
 target_include_directories(caldav
