@@ -18,10 +18,9 @@ int main() {
 	
 	std::vector<caldav::Calendar> calendars = client.GetCalendars();
 
-	std::cout << calendars[2].display_name << std::endl;
 	
 
-	std::vector<caldav::Todo> todos = client.GetTodos(calendars[1]);
+	std::vector<caldav::Todo> todos = client.GetTodos(calendars[2]);
 
 	// for (caldav::Todo todo : todos) {
 	// 	std::cout << "Local completed hour: " << todo.completed.hour << std::endl;
@@ -33,9 +32,14 @@ int main() {
 	// 	std::cout << event.summary << ": " <<  event.dtstart.day << std::endl;
 	// }
 
-	
+	caldav::Todo todo = todos[0];
 
-	client.CreateNewTodo("testing new todo", icalproperty_status::ICAL_STATUS_NEEDSACTION, calendars[2], true);
+	//caldav::Todo todo = client.CreateNewTodo("will the todo update?", icalproperty_status::ICAL_STATUS_NEEDSACTION, calendars[2]);
+
+	todo.summary = "updated todo";
+	// todo.summary = "new?";
+	//std::cout << todo.summary << std::endl;
+	client.UpdateTodo(todo, calendars[2], false);
 
 
 	return 0; 

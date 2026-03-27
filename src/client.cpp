@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <cstdlib>
+#include "caldav/todo.h"
 #include "curl/curl.h"
 #include "curl/easy.h"
 #include <pugixml.hpp>
@@ -48,7 +49,7 @@ namespace caldav {
 		}
 	}
 
-	int Client::CreateNewTodo(std::string summary, icalproperty_status status, Calendar cal, bool verbose) {
+	caldav::Todo Client::CreateNewTodo(std::string summary, icalproperty_status status, Calendar cal, bool verbose) {
 		caldav::Todo todo;
 
 		todo.summary = summary;
@@ -70,15 +71,59 @@ namespace caldav {
 
 		std::string cpp_uuid(uuid_str);
 
-		std::cout << cpp_uuid << std::endl;
+
+		todo.uid = uuid_str;
+
+		std::string ics = ParseIcal::TodoToIcal(todo, this->prod_id);
+
+		std::string response = PutRequestNew(this->base_url + cal.url + uuid_str + ".ics", this->user_pass, ics, verbose);
+
+		if (response == "") {
+			std::cout << "Error when creating new todo" << std::endl;
+			return todo;
+		}
+
+		return todo;
+	}
+
+	int Client::CreateNewTodo(caldav::Todo todo, Calendar cal, bool verbose) {
+		uuid_t uuid;
+		uuid_generate_random(uuid); 
+
+		char uuid_str[37]; 
+		uuid_unparse_lower(uuid, uuid_str);
+
+		std::string cpp_uuid(uuid_str);
 
 
 		todo.uid = uuid_str;
 
 		std::string ics = ParseIcal::TodoToIcal(todo, this->prod_id);
 
-		std::cout << ics << std::endl;
-		std::string response = PutRequest(this->base_url + cal.url + uuid_str + ".ics", this->user_pass, ics, verbose);
+		std::string response = PutRequestNew(this->base_url + cal.url + uuid_str + ".ics", this->user_pass, ics, verbose);
+
+		if (response == "") {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	int Client::UpdateTodo(caldav::Todo todo, Calendar cal, bool verbose) {
+		uuid_t uuid;
+		uuid_generate_random(uuid); 
+
+		char uuid_str[37]; 
+		uuid_unparse_lower(uuid, uuid_str);
+
+		std::string cpp_uuid(uuid_str);
+
+
+		todo.uid = uuid_str;
+
+		std::string ics = ParseIcal::TodoToIcal(todo, this->prod_id);
+
+		std::string response = PutRequestUpdate(this->base_url + cal.url + uuid_str + ".ics", this->user_pass, ics, todo.etag, verbose);
 
 		if (response == "") {
 			return 0;
@@ -287,7 +332,7 @@ namespace caldav {
 		return calendars;
 	}
 
-	std::string Client::PutRequest(std::string url, std::string user_pass, std::string data, bool verbose) {
+	std::string Client::PutRequestNew(std::string url, std::string user_pass, std::string data, bool verbose) {
 		CURL *curl;
 		CURLcode res;
 		std::string readBuffer;
@@ -304,6 +349,41 @@ namespace caldav {
 			struct curl_slist* headers = nullptr;
 			headers = curl_slist_append(headers, "Content-Type: text/calendar");
 			headers = curl_slist_append(headers, "If-None-Match: *");
+
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+			res = curl_easy_perform(curl);
+
+			if (res != CURLE_OK) {
+				std::cerr << "curl error: " << curl_easy_strerror(res) << std::endl;
+				return "";
+			}
+
+
+			return readBuffer;
+		}
+
+
+		return "";
+	}
+
+	std::string Client::PutRequestUpdate(std::string url, std::string user_pass, std::string data, std::string etag, bool verbose) {
+		CURL *curl;
+		CURLcode res;
+		std::string readBuffer;
+
+		curl = curl_easy_init();
+
+		if (curl) {
+			curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+			curl_easy_setopt(curl, CURLOPT_USERPWD, user_pass.c_str()); 
+			curl_easy_setopt(curl, CURLOPT_VERBOSE, verbose ? 1L : 0L);
+
+			struct curl_slist* headers = nullptr;
+			headers = curl_slist_append(headers, "Content-Type: text/calendar");
+			headers = curl_slist_append(headers, ("If-Match: " + etag).c_str());
 
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 

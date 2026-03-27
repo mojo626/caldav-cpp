@@ -11,11 +11,14 @@ namespace caldav {
 		public:
 			Client(std::string base_url, std::string user_pass, std::string prod_id = "-//caldav-cpp.//CalDAV Client//EN");
 			std::string CalDAVRequest(std::string url, std::string user_pass, int depth, std::string data, std::string method = "PROPFIND", bool verbose = false);
-			std::string PutRequest(std::string url, std::string user_pass, std::string data, bool verbose = false);
+			std::string PutRequestNew(std::string url, std::string user_pass, std::string data, bool verbose = false);
+			std::string PutRequestUpdate(std::string url, std::string user_pass, std::string data, std::string etag, bool verbose = false);
 			std::vector<caldav::Calendar> GetCalendars();
 			std::vector<caldav::Todo> GetTodos(Calendar cal, bool verbose = false);
 			std::vector<caldav::Event> GetEvents(Calendar cal, bool verbose = false);
-			int CreateNewTodo(std::string summary, icalproperty_status status, Calendar cal, bool verbose = false);
+			caldav::Todo CreateNewTodo(std::string summary, icalproperty_status status, Calendar cal, bool verbose = false);
+			int CreateNewTodo(caldav::Todo todo, Calendar cal, bool verbose = false);
+			int UpdateTodo(caldav::Todo todo, Calendar cal, bool verbose);
 
 		private:
 			static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);

@@ -21,7 +21,6 @@ namespace caldav {
 
 
 	caldav::Todo ParseIcal::ParseTodo(std::string data, std::string etag) {
-		std::cout << data << std::endl;
 		Todo todo;
 
 		icalcomponent* component = icalparser_parse_string(data.c_str());
